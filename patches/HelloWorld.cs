@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Binarysharp.MemoryManagement;
 
-namespace patchy
+namespace Patchy
 {
     public class HelloWorld
     {

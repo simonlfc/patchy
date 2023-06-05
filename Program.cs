@@ -1,15 +1,13 @@
-﻿using System;
-using System.Diagnostics;
+﻿using Binarysharp.MemoryManagement;
+using Microsoft.CSharp;
+using System;
 using System.CodeDom.Compiler;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.CSharp;
-using Binarysharp.MemoryManagement;
 using System.Reflection;
-using static System.Net.Mime.MediaTypeNames;
-using System.Text;
 
-namespace patchy
+namespace Patchy
 {
     internal class Program
     {
@@ -21,37 +19,47 @@ namespace patchy
         };
 
         static readonly CSharpCodeProvider provider = new CSharpCodeProvider();
-        
+
         static void Main()
         {
-            var sharp = new MemorySharp(Process.GetProcessesByName("iw3mp").First());
-            foreach (var patch in Directory.EnumerateFiles("../../patches", "*.pt", SearchOption.AllDirectories))
+            try
             {
-                Console.WriteLine("Compiling {0}...", patch.ToString());
-                CompilerOptions.ReferencedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
-                CompilerOptions.ReferencedAssemblies.Add("System.dll");
-                CompilerOptions.ReferencedAssemblies.Add("System.Core.dll");
-                CompilerOptions.ReferencedAssemblies.Add("E:\\Sources\\patchy\\packages\\MemorySharp.1.2.0\\lib\\MemorySharp.dll"); // i know
-                var compiler = provider.CompileAssemblyFromSource(CompilerOptions, File.ReadAllText(patch));
-
-                foreach (var error in compiler.Errors)
-                    Console.WriteLine(error.ToString());
-
-                if (!compiler.Errors.HasErrors)
+                var sharp = new MemorySharp(Process.GetProcessesByName("iw3mp").First());
+                foreach (var patch in Directory.EnumerateFiles("../../patches", "*.cs", SearchOption.AllDirectories))
                 {
-                    var module = compiler.CompiledAssembly.GetModules()[0];
-                    try
+                    Console.WriteLine("Compiling {0}...", patch.ToString());
+                    CompilerOptions.ReferencedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
+                    CompilerOptions.ReferencedAssemblies.Add("System.dll");
+                    CompilerOptions.ReferencedAssemblies.Add("System.Core.dll");
+                    CompilerOptions.ReferencedAssemblies.Add("E:\\Sources\\patchy\\packages\\MemorySharp.1.2.0\\lib\\MemorySharp.dll"); // i know
+                    var compiler = provider.CompileAssemblyFromSource(CompilerOptions, File.ReadAllText(patch));
+
+                    foreach (var error in compiler.Errors)
                     {
-                        module.GetType("patchy." + Path.GetFileNameWithoutExtension(patch)).GetMethod("Main").Invoke(null, new object[] { sharp });
+                        Console.WriteLine(error.ToString());
                     }
-                    catch (Exception e)
+
+                    if (!compiler.Errors.HasErrors)
                     {
-                        Console.WriteLine(e.InnerException.Message);
+                        var module = compiler.CompiledAssembly.GetModules()[0];
+                        try
+                        {
+                            module.GetType("Patchy." + Path.GetFileNameWithoutExtension(patch)).GetMethod("Main").Invoke(null, new object[] { sharp });
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.InnerException);
+                        }
                     }
                 }
-            }
 
-            Console.ReadLine();
+                Console.ReadLine();
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("no process, press the any key");
+                Console.ReadLine();
+            }
         }
     }
 }
